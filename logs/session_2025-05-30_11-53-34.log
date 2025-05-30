@@ -1,0 +1,38 @@
+Session started at 2025-05-30 11-53-34
+Timestamp: 2025-05-30 11:53:34
+  Mode: dev
+  Dry mode: False
+  Chat on: False
+User logged in at 2025-05-30 11:53:35
+
+[2025-05-30 11:53:40]
+CMD: chat
+OUTPUT:
+(Command produced no output)
+-----
+
+[2025-05-30 11:53:48]
+CMD: chat
+OUTPUT:
+(Command produced no output)
+-----
+
+[2025-05-30 11:53:51]
+CMD: ls
+OUTPUT:
+Stdout:
+=1.0.0
+gemini.py
+logs
+openai_calls.py
+README.md
+shell.py
+tara
+-----
+
+[2025-05-30 11:54:11]
+CMD: nl: list all files
+OUTPUT:
+Stderr:
+/bin/sh: nl:: command not found
+-----

@@ -1,0 +1,13 @@
+Session started at 2025-05-30 11-24-28
+Timestamp: 2025-05-30 11:24:28
+  Mode: dev
+  Dry mode: False
+  Chat on: False
+User logged in at 2025-05-30 11:24:29
+Mode changed to: student
+Timestamp: 2025-05-30 11:24:30
+  Mode: student
+  Dry mode: False
+  Chat on: False
+[2025-05-30 11:24:38] CMD: hi  →  OUT len=159
+[2025-05-30 11:24:52] CMD: what is the terminal  →  OUT len=411

@@ -1,0 +1,18 @@
+Session started at 2025-05-30 11-54-17
+Timestamp: 2025-05-30 11:54:17
+  Mode: dev
+  Dry mode: False
+  Chat on: False
+User logged in at 2025-05-30 11:54:18
+Mode changed to: student
+Timestamp: 2025-05-30 11:54:19
+  Mode: student
+  Dry mode: False
+  Chat on: False
+
+[2025-05-30 11:54:29]
+CMD: hi
+OUTPUT:
+Stderr:
+/bin/sh: hi: command not found
+-----
