@@ -1,0 +1,31 @@
+Session started at 2025-05-30 18-16-28
+Timestamp: 2025-05-30 18:16:28
+  Mode: dev
+  Dry mode: False
+  Chat on: False
+User logged in at 2025-05-30 18:16:29
+Mode changed to: student
+Timestamp: 2025-05-30 18:16:30
+  Mode: student
+  Dry mode: False
+  Chat on: False
+
+[2025-05-30 18:16:46]
+CMD: nl: list all files in directory
+OUTPUT:
+Stdout:
+=1.0.0
+gemini.py
+logs
+openai_calls.py
+README.md
+shell.py
+tara
+-----
+
+[2025-05-30 18:17:19]
+CMD: whats the point of even using zsh
+OUTPUT:
+Stderr:
+/bin/sh: whats: command not found
+-----

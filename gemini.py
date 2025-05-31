@@ -9,21 +9,16 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 import pyfiglet
 from time import sleep
 from datetime import datetime
-# rich is used for Text and pyfiglet, not for Panel in Textual context directly for widgets
-# from rich.console import Console # Already imported later
-# from rich.layout import Layout # Not used
-from rich.panel import Panel as RichPanel # Explicitly alias to avoid confusion
+from rich.panel import Panel as RichPanel
 from rich.text import Text
-# from pyfiglet import Figlet # Already imported
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical # Vertical not used directly but good for context
+from textual.containers import Horizontal, Vertical
 from textual.widgets import Static, Input, Header, Footer, Markdown
 from textual.scroll_view import ScrollView
 from textual.screen import Screen
 from textual.binding import Binding
-from typing import Union, List # Corrected List import
-from rich.panel import Panel  # ✅ Use the Rich Panel
-# For console printing outside Textual app (e.g., log_on)
+from typing import Union, List
+from rich.panel import Panel
 from rich.console import Console
 import platform
 class ChatScreen(Screen):
@@ -38,16 +33,13 @@ class ChatScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         self.output_md = Markdown("**Welcome to Chat Mode!** Ask me anything.")
-        # keep a reference to the Markdown widget so we can update it later
         self.output = ScrollView(self.output_md, id="chat_output")
         yield self.output
         yield Input(placeholder="Ask a question or type 'exit'", id="chat_input")
         yield Footer()
 
     async def action_request_close(self) -> None:
-        """Close chat screen and refocus the main prompt."""
         await self.app.pop_screen()
-        # Try to focus Student prompt first, then Dev prompt.
         try:
             self.app.query_one("#prompt_input", Input).focus()
         except Exception:
@@ -88,7 +80,6 @@ class ChatScreen(Screen):
                 for m in self.chat_history
             ])
             self.output_md.update(conversation_md)
-            # Scroll to bottom
             self.output.scroll_end(animate=False)
         except Exception as e:
             self.output_md.update(f"**Error:** {e}")
@@ -108,17 +99,14 @@ def get_gpt_explanation(command_text: str) -> str:
     except Exception as e:
         return f"Error getting explanation: {e}"
 
-# Add at top level, outside any class:
 def get_man_summary(command):
     try:
-        # Fast one-liner first
         one_liner = subprocess.run(
             ["man", "-f", command], capture_output=True, text=True
         )
         if one_liner.returncode == 0 and " - " in one_liner.stdout:
             return one_liner.stdout.strip()
 
-        # Fallback: parse NAME section
         full_page = subprocess.run(["man", command], capture_output=True, text=True)
         if full_page.returncode != 0:
             return f"(No man page entry found for {command})"
@@ -145,7 +133,6 @@ def get_man_summary(command):
 def run_command(command: str) -> str:
     if not command.strip():
         return "(No command to execute)"
-    # Special handling for 'cd' command
     if command.startswith("cd "):
         try:
             path = command[3:].strip()
@@ -175,7 +162,7 @@ class HistoryScreen(Screen):
 
     def __init__(
         self,
-        history_data: List[dict], # Use List from typing
+        history_data: List[dict],
         name: Union[str, None] = None,
         id: Union[str, None] = None,
         classes: Union[str, None] = None,
@@ -186,12 +173,11 @@ class HistoryScreen(Screen):
         self.title = "Command History"
 
     def format_history_as_markdown(self) -> str:
-        """Render *all* history entries, newest first, into a single markdown blob."""
         if not self.history_data:
             return "## Command History\n\n_No commands recorded yet._"
 
         blocks = []
-        for entry in reversed(self.history_data):   # newest first
+        for entry in reversed(self.history_data):
             ts = entry["timestamp"].strftime("%Y-%m-%d %H:%M:%S")
             cmd = entry.get("command", "")
             explanation = entry.get("explanation", "N/A")
@@ -315,39 +301,32 @@ Screen {
             id="header_panel"
         )
 
-        # -----  BEGIN NEW LAYOUT  -----
         with Horizontal(id="root"):
             with Vertical(id="left"):
-                # top row: command + explanation
                 with Horizontal(id="main"):
-                    # Command ScrollView
                     yield ScrollView(
                         Static(Panel("> Waiting for input...", title="Command", border_style="green"),
                                expand=True, id="command_content"),
                         id="command"
                     )
-                    # Explanation ScrollView
                     yield ScrollView(
                         Static(Panel("GPT Summary of command will appear here...",
                                      title="Explanation", border_style="blue"),
                                expand=True, id="explanation_content"),
                         id="explanation"
                     )
-                # Output ScrollView (below the top row)
                 yield ScrollView(
                     Static(Panel("(no output yet)", title="Output / Dry Run",
                                  border_style="magenta"), expand=True, id="output_content"),
                     id="output"
                 )
 
-            # suggestions column (full‑height)
             suggestion_scroll = ScrollView(id="suggestion_scroll")
             yield suggestion_scroll
             self.call_after_refresh(lambda: suggestion_scroll.mount(
                 Static(Panel("Suggestions will appear here...", title="Command Suggestions",
                              border_style="yellow"), id="suggestion_content", expand=True)
             ))
-        # -----  END NEW LAYOUT  -----
 
         yield Input(placeholder="> Type command, 'nl: <task>', 'chat', 'vfo', 'help', or 'quit'", id="prompt_input")
 
@@ -355,15 +334,12 @@ Screen {
         cmd = event.value.strip()
         self.query_one("#prompt_input", Input).value = ""
 
-        # New: handle quit and chat commands before anything else
         if cmd.lower() == "quit":
             self.exit()
             return
         elif cmd.lower() == "chat":
             await self.app.push_screen(ChatScreen())
             return
-        # --- Room switching logic ---
-        # Special handling for 'cd' command
         if cmd.startswith("cd "):
             try:
                 path = cmd[3:].strip()
@@ -415,14 +391,10 @@ Screen {
 
         explanation_text = "N/A"
         output_text = "(no command to run)"
-        # Ensure translated_command is always defined
         translated_command = ""
         raw_command = cmd
 
-        # --- Explanation logic update for non-GPT commands ---
-
         if cmd:
-            # If command starts with nl:, use OpenAI API to convert to bash command
             if cmd.startswith("nl:"):
                 self.query_one("#explanation_content", Static).update(
                     Panel("Translating natural language to bash command...", title="Explanation", border_style="blue")
@@ -454,8 +426,7 @@ Screen {
                 self.query_one("#explanation_content", Static).update(
                     Panel(f"Fetching explanation for: '{cmd}'...", title="Explanation", border_style="blue")
                 )
-                # No explanation for raw commands
-                explanation_text = ""  # No explanation for raw commands
+                explanation_text = ""
                 self.query_one("#explanation_content", Static).update(
                     Panel("(no explanation)", title="Explanation", border_style="blue")
                 )
@@ -471,7 +442,6 @@ Screen {
                     "output": output_text
                 }
                 self.user.add_history_and_log(history_entry)
-            # Check if translated_command indicates error
             if translated_command.startswith("Error") or translated_command.startswith("(empty"):
                 self.query_one("#output_content", Static).update(
                     Panel(translated_command, title="Output / Dry Run", border_style="red")
@@ -487,7 +457,6 @@ Screen {
 
         self.query_one("#prompt_input", Input).focus()
 
-        # Suggestions logic after output panel update
         try:
             suggestion_prompt = f"Using the previous command '{translated_command}' and its output, suggest 3 useful next bash commands to try."
             suggestion_completion = await asyncio.to_thread(lambda: openai.ChatCompletion.create(
@@ -507,7 +476,6 @@ Screen {
             )
 
     async def on_key(self, event) -> None:
-        # Autocomplete logic for Tab key
         from textual import events
         import os
         if hasattr(event, "key") and event.key == "tab":
@@ -529,7 +497,6 @@ Screen {
             except Exception:
                 pass
 
-    import platform
     @staticmethod
     def convert_nl_to_bash(nl_command: str) -> str:
         try:
@@ -587,9 +554,7 @@ class DevTARA(App):
         yield Header(show_clock=True, name="Developer TARA")
 
         with Horizontal():
-            # LEFT column (interpreted + explanation)
             with Vertical():
-                # Interpreted command pane
                 yield ScrollView(
                     Static(
                         RichPanel("Waiting for input...", title="Interpreted Command", border_style="green"),
@@ -599,7 +564,6 @@ class DevTARA(App):
                     id="interpreted_scroll_view",
                 )
 
-                # Explanation / warnings pane
                 yield ScrollView(
                     Static(
                         RichPanel("Explanation or warnings will appear here...", title="Warnings", border_style="red"),
@@ -609,7 +573,6 @@ class DevTARA(App):
                     id="explanation_dev_scroll_view",
                 )
 
-            # RIGHT column (suggestions)
             yield ScrollView(
                 Static(
                     RichPanel("Suggestions will appear here...", title="Command Suggestions", border_style="yellow"),
@@ -619,7 +582,6 @@ class DevTARA(App):
                 id="suggestion_dev_scroll_view",
             )
 
-        # Output pane (full‑width below)
         yield ScrollView(
             Static(
                 RichPanel("(no output yet)", title="Command Output", border_style="magenta"),
@@ -629,7 +591,6 @@ class DevTARA(App):
             id="output_dev_scroll_view",
         )
 
-        # Prompt
         yield Input(
             placeholder="> Type your command, 'vfo', 'help', or 'quit'",
             id="prompt_input_dev",
@@ -639,7 +600,6 @@ class DevTARA(App):
         cmd = event.value.strip()
         self.query_one("#prompt_input_dev", Input).value = ""
 
-        # New: handle quit before anything else
         if cmd.lower() == "quit":
             self.exit()
             return
@@ -681,8 +641,7 @@ class DevTARA(App):
             self.query_one("#explanation_dev_content_static", Static).update(
                 RichPanel(f"Fetching explanation for: '{cmd}'...", title="Warnings", border_style="red")
             )
-            # No explanation for raw commands
-            explanation_text = ""  # No explanation for raw commands
+            explanation_text = ""
             self.query_one("#explanation_dev_content_static", Static).update(
                 RichPanel("(no explanation)", title="Warnings", border_style="red")
             )
@@ -713,11 +672,10 @@ class DevTARA(App):
         import asyncio
         import openai
         while True:
-            await asyncio.sleep(3)  # Adjust refresh rate as needed
+            await asyncio.sleep(3)
             try:
                 input_widget = self.query_one("#prompt_input_dev", Input)
                 cmd = input_widget.value.strip()
-                # Use prompt logic for any previous command (not just nl:)
                 if cmd:
                     suggestion_prompt = f"Using the previous command '{cmd}' and its output, suggest 3 useful next bash commands to try."
                     suggestion_completion = await asyncio.to_thread(lambda: openai.ChatCompletion.create(
@@ -735,9 +693,6 @@ class DevTARA(App):
                 self.query_one("#suggestion_dev_static", Static).update(
                     RichPanel(f"Error: {e}", title="Command Suggestions", border_style="red")
                 )
-
-
-# dotenv.load_dotenv() # Not used in this scope
 
 class User:
     def __init__(self):
@@ -806,10 +761,6 @@ class User:
 RED = '\033[91m'
 GREEN = '\033[92m'
 BLUE = '\033[94m'
-# YELLOW = '\033[93m' # Not used
-# MAGENTA = '\033[95m' # Not used
-# CYAN = '\033[96m' # Not used
-# WHITE = '\033[97m' # Not used
 RESET = '\033[0m'
 
 rich_console = Console() # Renamed to avoid conflict if textual.Console is ever used
@@ -843,7 +794,7 @@ def log_on(user: User):
     while True:
         print("Enter mode: \n1. Student\n2. Developer\nChoice: ", end="", flush=True)
         mode_choice = get_single_keypress()
-        print(mode_choice)  # Echo the key back
+        print(mode_choice)
         if mode_choice == "1":
             user.set_mode("student")
             break
@@ -867,7 +818,7 @@ def log_on(user: User):
 
         if user.mode == "student":
             rich_console.print(Text.assemble(
-                ("🧠 STEPH — ", "white"),
+                ("TARA — ", "white"),
                 ("Semi-autonomous", "blue"), " ",
                 ("Terminal", "magenta"), " for ",
                 ("Responsive", "green"), " ",
